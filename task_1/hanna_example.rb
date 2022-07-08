@@ -9,7 +9,7 @@ require 'csv'
 EXTENTION_CSV = '.csv'
 
 def getting_url
-  puts 'Insert link for selected category'
+  puts 'Insert link for selected category:'
   url = get
   url.strip
 end
@@ -30,6 +30,10 @@ def create_file(filename)
       csv << line.values
     end
   end
+  puts 'hj'
+  puts 'hj'
+  puts 'hj'
+  puts 'hj'
   puts "File #{filename} was created."
 end
 
