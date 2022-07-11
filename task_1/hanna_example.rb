@@ -8,48 +8,79 @@ require 'csv'
 
 EXTENTION_CSV = '.csv'
 
+temp = []
+
+# enter link with nessesary category of products
 def getting_url
   puts 'Insert link for selected category:'
-  url = get
+  url = gets
   url.strip
 end
 
+# get the filename
 def file_name
   puts 'Enter the file name:'
-  filename = get
+  filename = gets
   filename += EXTENTION_CSV
-  puts "Your file is #{filename} was created."
-  filename
+  puts "Your file is #{filename}."
+  filename.to_s
 end
 
-def create_file(filename)
-  hash_data = []
-  hash_data << 'Name, Price, Picture'
-  CSV.open(filename, 'w', write_headers: false, headers: hash_data.first) do |csv|
-    hash_data.each do |line|
-      csv << line.values
-    end
+# create file
+def create_file(filename, temp)
+  temp << 'Name, Price, Picture'
+  CSV.open(filename, 'w', write_headers: false, headers: temp.first) do |csv|
+    csv << temp
   end
-  puts 'hj'
-  puts 'hj'
-  puts 'hj'
-  puts 'hj'
   puts "File #{filename} was created."
 end
 
-def add_file; end
-
-def parsing_link(url)
-  puts 'Connect to site'
+# get category links
+def find_products_links(url)
   page = Nokogiri::HTML(URI.open(url))
-  puts 'Search for nodes by xpath'
-  page.xpath('//*[@id="product_list"]').each do |link|
-    hash << link.content
+  page.xpath('//div[@class="product-desc display_sd"]//a//@href')
+end
+
+# get only numbers in prices
+def prices_only(prices)
+  prices_only = prices.map do |elem|
+    elem.to_s.delete '€'
+  end
+  prices_only.to_s.strip
+end
+
+# get only numbers in sizes
+def form_name_size(name, sizes)
+  sizes.map do |elem|
+    siz = elem.to_s.delete 'a-zA-z'
+    "#{name} #{siz}"
   end
 end
 
+# get names, prices, pictures
+def find_data(links, temp)
+  links.each do |link|
+    page = Nokogiri::HTML(URI.open(link))
+    name = page.xpath('//div[@class="nombre_fabricante_bloque col-md-12 desktop"]/*').at_xpath('//h1').text
+    sizes = page.xpath('//span [@class="radio_label"]//text()')
+    normal_name = form_name_size(name, sizes)
+    prices = page.xpath('//span [@class="price_comb"]//text()')
+    prices = prices_only(prices)
+    puts prices
+    img = page.xpath('//span [@id ="view_full_size"]//img/ @src').text
+    temp += [normal_name, prices, img]
+    # rubocop recommends to delete 11/10 string in thismethod but I need in comments in task
+    puts "Page #{link} was parsing."
+  end
+  temp
+end
+
 puts 'Begin working'
-file_name
-create_file
+filename = file_name
+create_file(filename, temp = [])
 url = getting_url
-parsing_link(url)
+links = find_products_links(url)
+temp = find_data(links, temp)
+CSV.open(filename, 'a', write_headers: false, headers: temp.first) do |csv|
+  csv << temp
+end
