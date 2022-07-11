@@ -9,6 +9,7 @@ require 'csv'
 EXTENTION_CSV = '.csv'
 
 temp = []
+tmp = []
 
 # enter link with nessesary category of products
 def getting_url
@@ -30,7 +31,7 @@ end
 def create_file(filename, temp)
   temp << 'Name, Price, Picture'
   CSV.open(filename, 'w', write_headers: false, headers: temp.first) do |csv|
-    csv << temp
+    # csv << temp
   end
   puts "File #{filename} was created."
 end
@@ -46,33 +47,48 @@ def prices_only(prices)
   prices_only = prices.map do |elem|
     elem.to_s.delete '€'
   end
-  prices_only.to_s.strip
+  prices_only.to_s.delete ' '
 end
 
 # get only numbers in sizes
 def form_name_size(name, sizes)
   sizes.map do |elem|
-    siz = elem.to_s.delete 'a-zA-z'
-    "#{name} #{siz}"
+    "#{name} (#{elem})"
   end
 end
 
 # get names, prices, pictures
-def find_data(links, temp)
+def find_data(links, tmp)
   links.each do |link|
+    new_arr = []
     page = Nokogiri::HTML(URI.open(link))
     name = page.xpath('//div[@class="nombre_fabricante_bloque col-md-12 desktop"]/*').at_xpath('//h1').text
     sizes = page.xpath('//span [@class="radio_label"]//text()')
     normal_name = form_name_size(name, sizes)
     prices = page.xpath('//span [@class="price_comb"]//text()')
-    prices = prices_only(prices)
-    puts prices
+    prices = prices_only(prices).to_s
     img = page.xpath('//span [@id ="view_full_size"]//img/ @src').text
-    temp += [normal_name, prices, img]
+    new_arr += [normal_name, prices, img]
+    tmp.push new_arr
     # rubocop recommends to delete 11/10 string in thismethod but I need in comments in task
     puts "Page #{link} was parsing."
   end
-  temp
+  tmp
+end
+
+def form(tmp)
+  result = []
+  tmp.each do |elem|
+    elem.each_with_index do |el, inx|
+      if el.size == 1
+        result << el
+      else
+        result << el[0][inx] # name
+        result << el[1][inx] # price
+        result << el[2] # img
+      end
+    end
+  end
 end
 
 puts 'Begin working'
@@ -80,7 +96,10 @@ filename = file_name
 create_file(filename, temp = [])
 url = getting_url
 links = find_products_links(url)
-temp = find_data(links, temp)
-CSV.open(filename, 'a', write_headers: false, headers: temp.first) do |csv|
+tmp = find_data(links, tmp)
+print tmp
+form(tmp)
+temp << tmp
+CSV.open(filename, 'a', write_headers: false) do |csv|
   csv << temp
 end
