@@ -79,16 +79,24 @@ end
 def form(tmp)
   result = []
   tmp.each do |elem|
+    # puts "\nElem\n"
+    # puts elem
     elem.each_with_index do |el, inx|
+      # puts "\nEl\n"
+      # print el
+      # puts "\nIndex\n"
+      # print inx
       if el.size == 1
         result << el
       else
-        result << el[0][inx] # name
-        result << el[1][inx] # price
-        result << el[2] # img
+        result << elem[0][inx] # name
+        result << elem[1][inx] # price
+        result << elem[2] # img
       end
     end
   end
+  # puts result
+  result
 end
 
 puts 'Begin working'
@@ -97,9 +105,12 @@ create_file(filename, temp = [])
 url = getting_url
 links = find_products_links(url)
 tmp = find_data(links, tmp)
-print tmp
+# print tmp
 form(tmp)
 temp << tmp
+print temp
 CSV.open(filename, 'a', write_headers: false) do |csv|
-  csv << temp
+  temp.each do |elem|
+    csv << elem
+  end
 end
