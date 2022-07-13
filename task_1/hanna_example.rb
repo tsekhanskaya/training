@@ -8,9 +8,6 @@ require 'csv'
 
 EXTENTION_CSV = '.csv'
 
-# temp = []
-# tmp = []
-
 # enter link with nessesary category of products
 def getting_url
   puts 'Insert link for selected category:'
@@ -37,7 +34,7 @@ def create_file(filename)
   puts "File #{filename} was created."
 end
 
-# get category links
+# find products links
 def find_products_links(url)
   page = Nokogiri::HTML(URI.open(url))
   page.xpath('//div[@class="product-desc display_sd"]//a//@href')
@@ -65,9 +62,11 @@ def format_one_product_one_name_one_price(filename, normal_name, prices, img)
   product.each do |elem|
     elem.each_index do |index_item| # go by name
       if elem.size == 1
-        add_to_file(filename, product[0], product[1], product[2]) # filename, name, price, pictures
+        # filename, name, price, pictures
+        add_to_file(filename, product[0][0], product[1][0], product[2][0])
       else
-        add_to_file(filename, product[0][index_item], product[1][index_item], product[2]) # filename, name, price, pictures
+        # filename, name, price, pictures
+        add_to_file(filename, product[0][index_item], product[1][index_item], product[2])
       end
     end
     break
@@ -97,7 +96,7 @@ end
 def add_to_file(filename, normal_name, prices, img)
   product = []
   product.push name: normal_name, price: prices, img: img
-  CSV.open(filename, 'a', write_headers: false) do |csv|
+  CSV.open(filename, 'a', write_headers: false, headers: product.first.keys) do |csv|
     product.each do |elem|
       csv << elem.values
     end
