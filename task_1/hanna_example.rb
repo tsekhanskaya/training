@@ -29,10 +29,10 @@ end
 
 # create file
 def create_file(filename)
-  temp = []
-  temp.push 'Name', 'Price', 'Picture'
-  CSV.open(filename, 'w', write_headers: false, headers: temp.first) do |csv|
-    csv << temp
+  first_line = []
+  first_line.push 'Name', 'Price', 'Picture'
+  CSV.open(filename, 'w', write_headers: false, headers: first_line.first) do |csv|
+    csv << first_line
   end
   puts "File #{filename} was created."
 end
@@ -58,10 +58,25 @@ def form_name_size(name, sizes)
   end
 end
 
+# fornating one_to_one and add to file
+def format_one_product_one_name_one_price(filename, normal_name, prices, img)
+  product = []
+  product.push normal_name, prices, img
+  product.each do |elem|
+    elem.each_index do |index_item| # go by name
+      if elem.size == 1
+        add_to_file(filename, product[0], product[1], product[2]) # filename, name, price, pictures
+      else
+        add_to_file(filename, product[0][index_item], product[1][index_item], product[2]) # filename, name, price, pictures
+      end
+    end
+    break
+  end
+end
+
 # get names, prices, pictures
 def parse_page(filename, links)
   links.each do |link|
-    # new_arr = []
     page = Nokogiri::HTML(URI.open(link))
     name = page.xpath('//div[@class="nombre_fabricante_bloque col-md-12 desktop"]/*').at_xpath('//h1').text
     sizes = page.xpath('//span [@class="radio_label"]//text()')
@@ -69,51 +84,25 @@ def parse_page(filename, links)
     prices = page.xpath('//span [@class="price_comb"]//text()')
     prices = prices_only(prices)
     img = page.xpath('//span [@id ="view_full_size"]//img/ @src').text
-    add_to_file(filename, normal_name, prices, img) unless normal_name == [] || prices == [] || img == []
-    # unless normal_name == [] || prices == [] || img == []
-    #   add_to_file(filename, normal_name, prices, img)
-    #   new_arr += [normal_name, prices, img.split] # normal_name,prices, img is elements of array
-    #   products.push new_arr
-    # end
-    # rubocop recommends to delete 12/10 strings in this method but I need add comments in task
+
+    unless normal_name == [] || prices == [] || img == []
+      format_one_product_one_name_one_price(filename, normal_name, prices,
+                                            img)
+    end
+
     puts "Page #{link} was parsing."
   end
-  # products
 end
 
 def add_to_file(filename, normal_name, prices, img)
   product = []
-  p "#{normal_name.class}, #{prices.class}, #{img.class}"
-  product.push "#{normal_name}, #{prices}, #{img}"
+  product.push name: normal_name, price: prices, img: img
   CSV.open(filename, 'a', write_headers: false) do |csv|
-    csv << product
-    # product.each do |elem|
-    #   csv << elem
-    # end
+    product.each do |elem|
+      csv << elem.values
+    end
   end
 end
-
-# def split_data_to_form(products)
-#   result = []
-#   temp = []
-#   # get my data about products
-#   products.each do |product|
-#     # get information about all names, prices, pictures
-#     product.each do |elem|
-#       # information about names or prices or pictures
-#       elem.each_index do |index_item|
-#         if elem.size == 1
-#           temp.push product[0], product[1], product[2] # add name, price, picture
-#         else
-#           temp.push product[0][index_item], product[1][index_item], product[2] # add name, price, picture
-#         end
-#         result << temp
-#       end
-#       break
-#     end
-#   end
-#   result
-# end
 
 def main
   puts 'Begin working'
@@ -122,10 +111,6 @@ def main
   url = getting_url
   links = find_products_links(url)
   parse_page(filename, links)
-  # tmp = parse_page(links, tmp = [])
-  # data = split_data_to_form(tmp)
-  # data.each { |product| add_to_file(filename, product) }
-  # temp << tmp
   puts 'Finish working'
 end
 
