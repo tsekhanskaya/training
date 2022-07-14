@@ -63,7 +63,7 @@ def format_one_product_one_name_one_price(filename, normal_name, prices, img)
     elem.each_index do |index_item| # go by name
       if elem.size == 1
         # filename, name, price, pictures
-        add_to_file(filename, product[0][0], product[1][0], product[2][0])
+        add_to_file(filename, product[0][0], product[1][0], product[2])
       else
         # filename, name, price, pictures
         add_to_file(filename, product[0][index_item], product[1][index_item], product[2])
@@ -104,13 +104,15 @@ def add_to_file(filename, normal_name, prices, img)
 end
 
 def main
-  puts 'Begin working'
+  puts 'Beginning of work'
   filename = create_filename
   create_file(filename)
   url = getting_url
   links = find_products_links(url)
   parse_page(filename, links)
-  puts 'Finish working'
+  puts 'Finish of work'
 end
 
 main
+
+# loadMore next button lnk_view btn btn-default
