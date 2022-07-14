@@ -34,10 +34,32 @@ def create_file(filename)
   puts "File #{filename} was created."
 end
 
-# find products links
-def find_products_links(url)
+def find_count_pages(url)
+  pages = []
   page = Nokogiri::HTML(URI.open(url))
-  page.xpath('//div[@class="product-desc display_sd"]//a//@href')
+  last_page = page.xpath('//*[@id="pagination_bottom"]/ul/li[6]/a/span').text
+  count = last_page.to_i
+  count.times { |number_pages| pages.push(number_pages + 1) }
+  pages.map { |elem| "#{url}?p=#{elem}" } # is links_pages
+end
+
+# find products links
+def find_products_links_on_one_page(url) # normal work ; add text
+  page = Nokogiri::HTML(URI.open(url))
+  links_products_on_one_page = []
+  page.xpath('//div[@class="product-desc display_sd"]//a//@href').each do |elem|
+    links_products_on_one_page << elem.text
+  end
+  links_products_on_one_page
+end
+
+def find_products_links(links_pages) # normal work
+  all_products_links = []
+  links_pages.each do |link|
+    all_products_links += find_products_links_on_one_page(link)
+  end
+  print all_products_links
+  all_products_links
 end
 
 # get only numbers in prices
@@ -74,8 +96,9 @@ def format_one_product_one_name_one_price(filename, normal_name, prices, img)
 end
 
 # get names, prices, pictures
-def parse_page(filename, links)
-  links.each do |link|
+def parse_one_page(filename, links_products_on_one_page)
+  links_products_on_one_page.each do |link|
+    puts "The page #{link} starts to parse."
     page = Nokogiri::HTML(URI.open(link))
     name = page.xpath('//div[@class="nombre_fabricante_bloque col-md-12 desktop"]/*').at_xpath('//h1').text
     sizes = page.xpath('//span [@class="radio_label"]//text()')
@@ -89,7 +112,7 @@ def parse_page(filename, links)
                                             img)
     end
 
-    puts "Page #{link} was parsing."
+    puts "The page #{link} has been parsed."
   end
 end
 
@@ -108,11 +131,12 @@ def main
   filename = create_filename
   create_file(filename)
   url = getting_url
-  links = find_products_links(url)
-  parse_page(filename, links)
+  links_pages = find_count_pages(url) # массив со строками, где строки - ссылки на 11 страниц links_pages
+  # puts "Our links_pages #{links_pages}"
+  all_links_products = find_products_links(links_pages) # on one link
+  # puts "Our links_products #{links_products}" # вот здесь какая-то чухня, формат вообще не тот
+  parse_one_page(filename, all_links_products)
   puts 'Finish of work'
 end
 
 main
-
-# loadMore next button lnk_view btn btn-default
