@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 puts 'Connect gems in hanna_example.rb'
-require 'curb'
 require 'nokogiri'
 require 'open-uri'
 require 'csv'
@@ -34,17 +33,18 @@ def create_file(filename)
   puts "File #{filename} was created."
 end
 
-def find_count_pages(url)
+# getting links 11 pages
+def getting_links_of_all_pages(url)
   pages = []
   page = Nokogiri::HTML(URI.open(url))
   last_page = page.xpath('//*[@id="pagination_bottom"]/ul/li[6]/a/span').text
   count = last_page.to_i
   count.times { |number_pages| pages.push(number_pages + 1) }
-  pages.map { |elem| "#{url}?p=#{elem}" } # is links_pages
+  pages.map { |elem| "#{url}?p=#{elem}" } # is links_pages (11)
 end
 
 # find products links
-def find_products_links_on_one_page(url) # normal work ; add text
+def find_products_links_on_one_page(url)
   page = Nokogiri::HTML(URI.open(url))
   links_products_on_one_page = []
   page.xpath('//div[@class="product-desc display_sd"]//a//@href').each do |elem|
@@ -53,13 +53,13 @@ def find_products_links_on_one_page(url) # normal work ; add text
   links_products_on_one_page
 end
 
-def find_products_links(links_pages) # normal work
-  all_products_links = []
+# find all product links
+def find_products_links(links_pages)
+  all_product_links = []
   links_pages.each do |link|
-    all_products_links += find_products_links_on_one_page(link)
+    all_product_links += find_products_links_on_one_page(link)
   end
-  print all_products_links
-  all_products_links
+  all_product_links
 end
 
 # get only numbers in prices
@@ -84,10 +84,10 @@ def format_one_product_one_name_one_price(filename, normal_name, prices, img)
   product.each do |elem|
     elem.each_index do |index_item| # go by name
       if elem.size == 1
-        # filename, name, price, pictures
+        # filename, name, price, picture
         add_to_file(filename, product[0][0], product[1][0], product[2])
       else
-        # filename, name, price, pictures
+        # filename, name, price, picture
         add_to_file(filename, product[0][index_item], product[1][index_item], product[2])
       end
     end
@@ -100,7 +100,8 @@ def parse_one_page(filename, links_products_on_one_page)
   links_products_on_one_page.each do |link|
     puts "The page #{link} starts to parse."
     page = Nokogiri::HTML(URI.open(link))
-    name = page.xpath('//div[@class="nombre_fabricante_bloque col-md-12 desktop"]/*').at_xpath('//h1').text
+    name = page.xpath('//div[@class="nombre_fabricante_bloque col-md-12 desktop"]/*').at_xpath('//h1')
+    name = name.text unless name.nil?
     sizes = page.xpath('//span [@class="radio_label"]//text()')
     normal_name = form_name_size(name, sizes)
     prices = page.xpath('//span [@class="price_comb"]//text()')
@@ -131,10 +132,8 @@ def main
   filename = create_filename
   create_file(filename)
   url = getting_url
-  links_pages = find_count_pages(url) # массив со строками, где строки - ссылки на 11 страниц links_pages
-  # puts "Our links_pages #{links_pages}"
-  all_links_products = find_products_links(links_pages) # on one link
-  # puts "Our links_products #{links_products}" # вот здесь какая-то чухня, формат вообще не тот
+  links_pages = getting_links_of_all_pages(url) # array with 11 links
+  all_links_products = find_products_links(links_pages)
   parse_one_page(filename, all_links_products)
   puts 'Finish of work'
 end
