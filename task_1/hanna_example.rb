@@ -6,9 +6,10 @@ require 'open-uri'
 require 'csv'
 
 EXTENTION_CSV = '.csv'
+FIRST_LINE = %w[Name Price Picture].freeze
 
 # enter link with nessesary category of products
-def getting_url
+def request_url
   puts 'Insert link for selected category:'
   url = gets
   url.strip
@@ -25,12 +26,18 @@ end
 
 # create file
 def create_file(filename)
-  first_line = []
-  first_line.push 'Name', 'Price', 'Picture'
-  CSV.open(filename, 'w', write_headers: false, headers: first_line.first) do |csv|
-    csv << first_line
-  end
+  CSV.open(filename, 'w', write_headers: false, headers: FIRST_LINE.first).add_row(FIRST_LINE)
   puts "File #{filename} was created."
+end
+
+def add_to_file(filename, normal_name, prices, img)
+  product = []
+  product.push name: normal_name, price: prices, img: img
+  CSV.open(filename, 'a', write_headers: false, headers: product.first.keys) do |csv|
+    product.each do |elem|
+      csv << elem.values
+    end
+  end
 end
 
 # getting links 11 pages
@@ -78,7 +85,7 @@ def form_name_size(name, sizes)
 end
 
 # fornating one_to_one and add to file
-def format_one_product_one_name_one_price(filename, normal_name, prices, img)
+def format_one_by_one(filename, normal_name, prices, img)
   product = []
   product.push normal_name, prices, img
   product.each do |elem|
@@ -109,21 +116,11 @@ def parse_one_page(filename, links_products_on_one_page)
     img = page.xpath('//span [@id ="view_full_size"]//img/ @src').text
 
     unless normal_name == [] || prices == [] || img == []
-      format_one_product_one_name_one_price(filename, normal_name, prices,
-                                            img)
+      format_one_by_one(filename, normal_name, prices,
+                        img)
     end
 
     puts "The page #{link} has been parsed."
-  end
-end
-
-def add_to_file(filename, normal_name, prices, img)
-  product = []
-  product.push name: normal_name, price: prices, img: img
-  CSV.open(filename, 'a', write_headers: false, headers: product.first.keys) do |csv|
-    product.each do |elem|
-      csv << elem.values
-    end
   end
 end
 
@@ -131,7 +128,7 @@ def main
   puts 'Beginning of work'
   filename = create_filename
   create_file(filename)
-  url = getting_url
+  url = request_url
   links_pages = getting_links_of_all_pages(url) # array with 11 links
   all_links_products = find_products_links(links_pages)
   parse_one_page(filename, all_links_products)
