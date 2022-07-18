@@ -7,21 +7,6 @@ FIRST_LINE = %w[Name Price Picture].freeze
 
 # class works with file.csv
 class File
-  attr_reader :name, :price, :img
-
-  def initialize(filename:, name:, price:, img:)
-    @filename = filename
-    @name = name
-    @price = price
-    @img = img
-  end
-
-  def self.create_filename
-    puts 'Enter the file name:'
-    filename = gets.strip.chomp.concat(EXTENSION).to_s
-    puts "Your file is #{filename}."
-  end
-
   def self.create_file(filename)
     CSV.open(filename, 'w', write_headers: false, headers: FIRST_LINE.first).add_row(FIRST_LINE)
     puts "File #{filename} was created."
