@@ -76,24 +76,37 @@ class Parsing
 
   # get names, prices, pictures
   def self.parse_one_page(filename, links_products_on_one_page)
+    thread = []
     links_products_on_one_page.each do |link|
-      puts "The page #{link} starts to parse."
-      page = Nokogiri::HTML(URI.open(link))
+      thread << Thread.new do
+        puts "The page #{link} starts to parse."
+        page = Nokogiri::HTML(URI.open(link))
 
-      name = page.xpath('//div[@class="nombre_fabricante_bloque col-md-12 desktop"]/*').at_xpath('//h1')
-      name = name.text unless name.nil?
+        name = page.xpath('//div[@class="nombre_fabricante_bloque col-md-12 desktop"]/*').at_xpath('//h1')
+        name = name.text unless name.nil?
 
-      sizes = page.xpath('//span [@class="radio_label"]//text()')
+        sizes = page.xpath('//span [@class="radio_label"]//text()')
 
-      normal_name = form_name_size(name, sizes)
+        normal_name = form_name_size(name, sizes)
 
-      prices = page.xpath('//span [@class="price_comb"]//text()')
-      prices = prices_only(prices)
+        prices = page.xpath('//span [@class="price_comb"]//text()')
+        prices = prices_only(prices)
 
-      img = page.xpath('//span [@id ="view_full_size"]//img/ @src').text
+        img = page.xpath('//span [@id ="view_full_size"]//img/ @src').text
 
-      add_product(filename, normal_name, prices, img) unless normal_name == [] || prices == [] || img == []
-      puts "The page #{link} has been parsed."
+        add_product(filename, normal_name, prices, img) unless normal_name == [] || prices == [] || img == []
+        puts "The page #{link} has been parsed."
+      end
+      threads.map(&:join)
     end
+  end
+
+  # main method to parse
+  def main_parse
+    argument = YAML.load_file('arguments.yaml')
+    url = argument['link']
+    links_pages = request_links_of_all_pages(url) # array with 11 links
+    all_links_products = find_products_links(links_pages)
+    parse_one_page(filename, all_links_products)
   end
 end

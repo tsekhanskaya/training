@@ -7,11 +7,13 @@ FIRST_LINE = %w[Name Price Picture].freeze
 
 # class works with file.csv
 class File
+  # create fileS
   def self.create_file(filename)
     CSV.open(filename, 'w', write_headers: false, headers: FIRST_LINE.first).add_row(FIRST_LINE)
     puts "File #{filename} was created."
   end
 
+  # add name, price and picture to file
   def self.add_to_file(filename, name, price, img)
     product = []
     product.push name: name, price: price, img: img
