@@ -4,6 +4,7 @@ puts 'Connect gems in hanna_example.rb'
 require 'nokogiri'
 require 'open-uri'
 require 'csv'
+require 'time'
 
 EXTENTION_CSV = '.csv'
 FIRST_LINE = %w[Name Price Picture].freeze
@@ -40,8 +41,8 @@ def add_to_file(filename, normal_name, prices, img)
   end
 end
 
-# getting links 11 pages
-def getting_links_of_all_pages(url)
+# get links 11 pages
+def request_links_of_all_pages(url)
   pages = []
   page = Nokogiri::HTML(URI.open(url))
   last_page = page.xpath('//*[@id="pagination_bottom"]/ul/li[6]/a/span').text
@@ -84,8 +85,8 @@ def form_name_size(name, sizes)
   end
 end
 
-# fornating one_to_one and add to file
-def format_one_by_one(filename, normal_name, prices, img)
+# divide product into table template and add to file
+def add_product(filename, normal_name, prices, img)
   product = []
   product.push normal_name, prices, img
   product.each do |elem|
@@ -107,32 +108,36 @@ def parse_one_page(filename, links_products_on_one_page)
   links_products_on_one_page.each do |link|
     puts "The page #{link} starts to parse."
     page = Nokogiri::HTML(URI.open(link))
+
     name = page.xpath('//div[@class="nombre_fabricante_bloque col-md-12 desktop"]/*').at_xpath('//h1')
     name = name.text unless name.nil?
+
     sizes = page.xpath('//span [@class="radio_label"]//text()')
+
     normal_name = form_name_size(name, sizes)
+
     prices = page.xpath('//span [@class="price_comb"]//text()')
     prices = prices_only(prices)
+
     img = page.xpath('//span [@id ="view_full_size"]//img/ @src').text
 
-    unless normal_name == [] || prices == [] || img == []
-      format_one_by_one(filename, normal_name, prices,
-                        img)
-    end
-
+    add_product(filename, normal_name, prices, img) unless normal_name == [] || prices == [] || img == []
     puts "The page #{link} has been parsed."
   end
 end
 
 def main
-  puts 'Beginning of work'
+  start = Time.now
+  puts "Beginning of work at #{start}"
   filename = create_filename
   create_file(filename)
   url = request_url
-  links_pages = getting_links_of_all_pages(url) # array with 11 links
+  links_pages = request_links_of_all_pages(url) # array with 11 links
   all_links_products = find_products_links(links_pages)
   parse_one_page(filename, all_links_products)
-  puts 'Finish of work'
+  finish = Time.now
+  puts "Finish of work at #{finish}"
+  puts "Parsing was #{finish - start} seconds."
 end
 
 main
