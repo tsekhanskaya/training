@@ -6,12 +6,6 @@ require_relative 'file'
 
 # class for parse information by web-site
 class Parsing
-  def self.request_url
-    puts 'Insert link for selected category:'
-    url = gets
-    url.strip
-  end
-
   # get links 11 pages
   def self.request_links_of_all_pages(url)
     pages = []
@@ -64,10 +58,10 @@ class Parsing
       elem.each_index do |index_item| # go by name
         if elem.size == 1
           # filename, name, price, picture
-          add_to_file(filename, product[0][0], product[1][0], product[2])
+          File.add_to_file(filename, product[0][0], product[1][0], product[2])
         else
           # filename, name, price, picture
-          add_to_file(filename, product[0][index_item], product[1][index_item], product[2])
+          File.add_to_file(filename, product[0][index_item], product[1][index_item], product[2])
         end
       end
       break
@@ -97,14 +91,12 @@ class Parsing
         add_product(filename, normal_name, prices, img) unless normal_name == [] || prices == [] || img == []
         puts "The page #{link} has been parsed."
       end
-      threads.map(&:join)
+      thread.each(&:join)
     end
   end
 
   # main method to parse
-  def main_parse
-    argument = YAML.load_file('arguments.yaml')
-    url = argument['link']
+  def self.main_parse(filename, url)
     links_pages = request_links_of_all_pages(url) # array with 11 links
     all_links_products = find_products_links(links_pages)
     parse_one_page(filename, all_links_products)
