@@ -15,7 +15,7 @@ def main
   File.create_file(argument['filename'])
   Parsing.main_parse(argument['filename'], argument['link'])
   finish = Time.now
-  p "Parsing was #{finish - start} seconds."
+  puts "Parsing was #{finish - start} seconds."
 end
 
 main
