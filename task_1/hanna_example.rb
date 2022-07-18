@@ -4,6 +4,7 @@ puts 'Connect gems in hanna_example.rb'
 require 'nokogiri'
 require 'open-uri'
 require 'csv'
+require 'time'
 
 EXTENTION_CSV = '.csv'
 FIRST_LINE = %w[Name Price Picture].freeze
@@ -126,14 +127,17 @@ def parse_one_page(filename, links_products_on_one_page)
 end
 
 def main
-  puts 'Beginning of work'
+  start = Time.now
+  puts "Beginning of work at #{start}"
   filename = create_filename
   create_file(filename)
   url = request_url
   links_pages = request_links_of_all_pages(url) # array with 11 links
   all_links_products = find_products_links(links_pages)
   parse_one_page(filename, all_links_products)
-  puts 'Finish of work'
+  finish = Time.now
+  puts "Finish of work at #{finish}"
+  puts "Parsing was #{finish - start} seconds."
 end
 
 main

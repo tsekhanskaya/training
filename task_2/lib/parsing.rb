@@ -70,10 +70,10 @@ class Parsing
         prices = prices_only(prices)
 
         img = page.xpath('//span [@id ="view_full_size"]//img/ @src').text
-        product = Product.new (normal_name, prices, img)
+        product = Product.new(normal_name = normal_name, prices = prices, img = img)
         unless product.normal_name == [] || product.prices == [] || product.img == []
           Product.add_product(filename, product.normal_name, product.prices,
-            product.img)
+                              product.img)
         end
         puts "The page #{link} has been parsed."
       end
